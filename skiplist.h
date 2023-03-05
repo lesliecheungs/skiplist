@@ -231,4 +231,87 @@ int SkipList<K, V>::get_random_level() {
 
     return k;
 }
+
+
+template<typename K, typename V>
+bool SkipList<K, V>::search_element(K key) {
+    std::cout << "search_element-----------------" << std::endl;
+    Node<K, V>* current = _header;
+
+    for(int i=_skip_list_level; i>=0; i--) {
+        while(current->forward[i] && current->forward[i]->get_key() < key) {
+            current = current->forward[i];
+        }
+    }
+
+    current = current->forward[0];
+
+    if(current and current->get_key == key) {
+        std::cout << "Found key: " << key << ", value: " << current->get_value() << std::endl;
+        return true;
+    }
+
+    
+    std::cout << "Not Found Key:" << key << std::endl;
+    return false;
+}
+template<typename K, typename V>
+void SkipList<K, V>::dump_file() {
+    std::cout << "dump_file-----------------" << std::endl;
+    _file_writer.open(STORE_FILE);
+    Node<K, V>* node = this->_header->forward[0];
+
+    while(node != null) {
+        _file_writer << node->get_key() << ":" << node->get_value() << "\n";
+        std::cout << node->get_key() << ":" << node->get_value() << ";\n";
+        node = node->forward[0];
+    }
+    _file_writer.flush();
+    _file_writer.close();
+    return ;
+}
+
+template<typename K, typename V>
+void SkipList<K, V>::load_file() {
+    _file_reader.open(STORE_FILE);
+    std::cout << "load_file-----------------" << std::endl;
+    std::string line;
+    std::string* key = new std::string();
+    std::string* value = new std::string();
+
+    while(getline(_file_reader, line)) {
+        get_key_value_from_string(line, key, value);
+        if(key->empty || value->empty) {
+            continue;
+        }
+        insert(*key, *value);
+        std::cout << "key:" << *key << "value:" << *value << std::endl;
+    }
+    _file_reader.close();
+}
+
+template<typename K, typename V>
+int SkipList<K, V>::size() {
+    return _element_count;
+}
+
+template<typename K, typename V>
+void SkipList<K, V>::get_key_value_from_string(const std::string& str, std::string* key, std::string* value) {
+    if(!is_valid_string(str)) {
+        return;
+    }
+    *key = str.substr(0, str.find(delimiter));
+    *value = str.substr(str.find(delimiter)+1, str.length());
+}
+
+template<typename K, typename V>
+bool SkipList<K, V>::is_valid_string(const std::string& str) {
+    if(str.empty()) {
+        return false;
+    }
+    if(str.find(delimiter) == std::string::npos) {
+        return false;
+    }
+    return true;
+}
 #endif
